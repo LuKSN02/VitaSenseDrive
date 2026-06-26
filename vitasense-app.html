@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitaSense Drive — Aplicativo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== TOKENS ===== */
+:root{
+  --bg:#070a13;
+  --bg-soft:#0c1120;
+  --bg-elev:#10172b;
+  --bg-card:#131b32;
+  --bg-card-hover:#161f3a;
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.14);
+  --blue:#3568e0;
+  --blue-bright:#5b8aff;
+  --blue-soft:rgba(91,138,255,.14);
+  --green:#33d499;
+  --green-soft:rgba(51,212,153,.14);
+  --amber:#f3b341;
+  --amber-soft:rgba(243,179,65,.14);
+  --red:#ef5466;
+  --red-soft:rgba(239,84,102,.14);
+  --purple:#a78bfa;
+  --purple-soft:rgba(167,139,250,.14);
+  --text:#eef2fb;
+  --text-dim:#9aa6c4;
+  --text-faint:#5d6885;
+  --font-display:'Rajdhani',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:24px;
+  --shadow-glow:0 0 0 1px rgba(91,138,255,.15), 0 20px 60px -20px rgba(53,104,224,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:24px 16px 40px;
+}
+img{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--text);}
+ul{list-style:none;}
+:focus-visible{outline:2px solid var(--blue-bright);outline-offset:3px;border-radius:4px;}
+h1,h2,h3,h4,h5{font-family:var(--font-display);font-weight:600;letter-spacing:.01em;color:var(--text);}
+.mono{font-family:var(--font-mono);}
+
+/* ===== PHONE SHELL ===== */
+.phone{
+  width:390px;
+  min-height:844px;
+  background:var(--bg-soft);
+  border-radius:48px;
+  border:1.5px solid var(--line-strong);
+  box-shadow:var(--shadow-glow), 0 40px 100px -30px rgba(0,0,0,.8);
+  overflow:hidden;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+/* Notch */
+.phone-bar{
+  height:44px;background:var(--bg);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;flex-shrink:0;
+}
+.phone-bar .time{font-family:var(--font-mono);font-size:12px;font-weight:700;}
+.phone-bar .icons{display:flex;gap:6px;align-items:center;}
+.phone-bar .icons svg{width:14px;height:14px;fill:var(--text);}
+.notch{width:120px;height:30px;background:var(--bg);border-radius:0 0 20px 20px;margin:0 auto;display:block;}
+
+/* ===== SCREEN CONTAINER ===== */
+.screen-wrap{
+  flex:1;overflow:hidden;position:relative;
+}
+.screen{
+  display:none;
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-bottom:80px;
+  scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{display:none;}
+.screen.active{display:block;animation:screenIn .35s ease both;}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{
+  height:72px;background:var(--bg);
+  border-top:1px solid var(--line);
+  display:flex;align-items:stretch;
+  flex-shrink:0;position:relative;z-index:10;
+}
+.nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;font-size:10px;font-weight:500;color:var(--text-faint);
+  transition:color .2s;cursor:pointer;
+  position:relative;
+}
+.nav-tab svg{width:22px;height:22px;transition:transform .2s;}
+.nav-tab.active{color:var(--blue-bright);}
+.nav-tab.active svg{transform:scale(1.1);}
+.nav-tab.active::after{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:32px;height:2px;background:var(--blue-bright);border-radius:0 0 3px 3px;
+}
+.nav-tab.sos-tab{color:var(--red);}
+.nav-tab.sos-tab svg{filter:drop-shadow(0 0 6px rgba(239,84,102,.6));}
+
+/* ===== COMMON COMPONENTS ===== */
+.screen-header{
+  padding:20px 20px 12px;
+  background:var(--bg);
+  position:sticky;top:0;z-index:5;
+  border-bottom:1px solid var(--line);
+}
+.screen-header h2{font-size:20px;}
+.screen-header p{font-size:12.5px;color:var(--text-faint);margin-top:2px;}
+
+.card{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:18px;margin-bottom:12px;
+}
+.card-title{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);margin-bottom:12px;}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 20px;border-radius:999px;font-size:14px;font-weight:600;
+  transition:transform .18s, box-shadow .18s, background .18s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:linear-gradient(135deg,var(--blue-bright),var(--blue));color:#fff;box-shadow:0 8px 20px -8px rgba(91,138,255,.7);}
+.btn-primary:hover{box-shadow:0 12px 24px -8px rgba(91,138,255,.85);}
+.btn-ghost{background:transparent;border:1px solid var(--line-strong);color:var(--text);}
+.btn-danger{background:linear-gradient(135deg,#ff6b78,var(--red));color:#fff;box-shadow:0 8px 20px -8px rgba(239,84,102,.65);}
+.btn-block{width:100%;}
+.btn-sm{padding:8px 14px;font-size:12.5px;}
+
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
+  font-size:11.5px;font-weight:700;letter-spacing:.03em;
+}
+.pill-green{background:var(--green-soft);color:var(--green);}
+.pill-amber{background:var(--amber-soft);color:var(--amber);}
+.pill-red{background:var(--red-soft);color:var(--red);}
+.pill-blue{background:var(--blue-soft);color:var(--blue-bright);}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;}
+
+.divider{height:1px;background:var(--line);margin:12px 0;}
+.row-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
+.row-item:last-child{border-bottom:none;}
+.row-item .label{font-size:13.5px;color:var(--text-dim);}
+.row-item .value{font-family:var(--font-mono);font-size:13.5px;font-weight:600;}
+
+/* ===== STATUS GAUGE (circular) ===== */
+.gauge-ring{
+  width:76px;height:76px;border-radius:50%;flex-shrink:0;
+  background:conic-gradient(var(--gauge-color,var(--green)) calc(var(--gauge-pct,20)*1%), var(--bg-soft) 0);
+  display:flex;align-items:center;justify-content:center;position:relative;
+  transition:background 1s ease;
+}
+.gauge-ring::before{content:'';position:absolute;inset:8px;border-radius:50%;background:var(--bg-card);}
+.gauge-ring .gval{position:relative;z-index:1;font-family:var(--font-mono);font-weight:700;font-size:13px;}
+
+/* ===== EKG STRIP ===== */
+.ekg-strip{height:72px;background:var(--bg);border-radius:12px;overflow:hidden;position:relative;margin-bottom:14px;}
+.ekg-strip svg{position:absolute;top:0;left:0;height:100%;width:200%;animation:ekgScroll 5.5s linear infinite;}
+@keyframes ekgScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.ekg-strip .ekg-label{position:absolute;top:8px;left:12px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);z-index:2;}
+.ekg-strip .ekg-bpm{position:absolute;bottom:8px;left:12px;font-family:var(--font-mono);font-size:18px;font-weight:700;z-index:2;}
+.ekg-strip .ekg-bpm span{font-size:10px;color:var(--text-faint);font-family:var(--font-body);margin-left:3px;}
+
+/* ===== SCREEN: HOME/DASHBOARD ===== */
+#screen-home{background:var(--bg-soft);}
+.home-top{
+  padding:20px 20px 0;
+  background:linear-gradient(165deg,rgba(53,104,224,.22),transparent 70%);
+}
+.home-welcome{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.home-welcome h2{font-size:21px;}
+.home-welcome h2 span{color:var(--blue-bright);}
+.home-welcome .bell{width:38px;height:38px;border-radius:50%;background:var(--bg-card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;}
+.notif-badge{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:var(--red);border:2px solid var(--bg-soft);}
+
+.vitaindex-card{
+  background:linear-gradient(150deg,var(--bg-elev),var(--bg-card));
+  border:1px solid var(--line-strong);border-radius:var(--radius-lg);
+  padding:20px;margin-bottom:14px;
+  box-shadow:var(--shadow-glow);
+  position:relative;overflow:hidden;
+}
+.vitaindex-card::before{
+  content:'ÍNDICE';position:absolute;right:-10px;top:16px;
+  font-family:var(--font-display);font-size:80px;font-weight:700;color:rgba(91,138,255,.04);
+  letter-spacing:.05em;pointer-events:none;
+}
+.vitaindex-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;}
+.vitaindex-row{display:flex;align-items:center;gap:18px;}
+.vitaindex-main{flex:1;}
+.vitaindex-status{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1.1;margin-bottom:4px;}
+.vitaindex-desc{font-size:12.5px;color:var(--text-dim);}
+.vitaindex-bar-wrap{margin-top:14px;}
+.vitaindex-bar-track{height:6px;border-radius:999px;background:var(--line-strong);overflow:hidden;}
+.vitaindex-bar-fill{height:100%;border-radius:999px;transition:width 1.2s ease, background 1.2s ease;}
+
+.quick-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.metric-tile{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:14px;
+}
+.metric-tile .mt-label{font-size:11px;color:var(--text-faint);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;}
+.metric-tile .mt-value{font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--text);}
+.metric-tile .mt-sub{font-size:11px;color:var(--text-faint);margin-top:2px;}
+
+.home-section-pad{padding:0 20px;}
+
+/* ===== ALERTS LIST ===== */
+.alert-item{
+  display:flex;align-items:flex-start;gap:12px;padding:13px 0;
+  border-bottom:1px solid var(--line);
+}
+.alert-item:last-child{border-bottom:none;}
+.alert-icon{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.alert-icon svg{width:18px;height:18px;}
+.alert-icon.leve{background:var(--blue-soft);color:var(--blue-bright);}
+.alert-icon.intensa{background:var(--amber-soft);color:var(--amber);}
+.alert-icon.critico{background:var(--red-soft);color:var(--red);}
+.alert-icon.pausa{background:var(--green-soft);color:var(--green);}
+.alert-content b{display:block;font-size:13.5px;margin-bottom:2px;}
+.alert-content span{font-size:12px;color:var(--text-faint);}
+.alert-time{font-size:11px;color:var(--text-faint);margin-left:auto;white-space:nowrap;padding-top:2px;}
+
+/* ===== HISTORICO ===== */
+#screen-historico{background:var(--bg-soft);}
+.trip-card{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:16px 18px;margin-bottom:10px;cursor:pointer;
+  transition:border-color .2s, background .2s;
+}
+.trip-card:hover{border-color:rgba(91,138,255,.3);background:var(--bg-card-hover);}
+.trip-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.trip-title{font-size:14.5px;font-weight:700;}
+.trip-date{font-size:11.5px;color:var(--text-faint);}
+.trip-metrics{display:flex;gap:16px;flex-wrap:wrap;}
+.trip-metric{display:flex;flex-direction:column;gap:1px;}
+.trip-metric b{font-family:var(--font-mono);font-size:14px;}
+.trip-metric span{font-size:10.5px;color:var(--text-faint);}
+
+/* ===== METAS ===== */
+#screen-metas{background:var(--bg-soft);}
+.meta-card{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:16px 18px;margin-bottom:10px;
+}
+.meta-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.meta-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.meta-icon svg{width:20px;height:20px;}
+.meta-info b{display:block;font-size:14px;margin-bottom:2px;}
+.meta-info span{font-size:12px;color:var(--text-faint);}
+.meta-prog-track{height:6px;background:var(--line-strong);border-radius:999px;overflow:hidden;margin-bottom:6px;}
+.meta-prog-fill{height:100%;border-radius:999px;transition:width 1s ease;}
+.meta-footer{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-faint);}
+
+.conquista-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.conquista-card{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:14px;text-align:center;transition:border-color .2s;
+}
+.conquista-card.unlocked{border-color:rgba(243,179,65,.4);background:rgba(243,179,65,.04);}
+.conquista-badge{font-size:32px;margin-bottom:8px;display:block;}
+.conquista-card b{display:block;font-size:12.5px;margin-bottom:3px;}
+.conquista-card span{font-size:11px;color:var(--text-faint);}
+.conquista-card.locked{filter:grayscale(.7);opacity:.5;}
+
+/* ===== SOS ===== */
+#screen-sos{background:var(--bg);}
+.sos-hero{
+  background:linear-gradient(160deg,rgba(239,84,102,.15),transparent 60%);
+  padding:28px 20px 20px;text-align:center;
+}
+.sos-btn-wrap{
+  display:flex;align-items:center;justify-content:center;margin:20px 0 10px;
+}
+.sos-big-btn{
+  width:140px;height:140px;border-radius:50%;
+  background:linear-gradient(145deg,#ff6b78,var(--red));
+  border:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--font-display);font-size:22px;font-weight:700;color:#fff;letter-spacing:.1em;
+  box-shadow:0 0 0 12px rgba(239,84,102,.12), 0 0 0 24px rgba(239,84,102,.06), 0 20px 50px -10px rgba(239,84,102,.7);
+  transition:transform .2s, box-shadow .2s;
+  animation:sosPulse 2.5s ease-in-out infinite;
+}
+.sos-big-btn:active{transform:scale(.93);box-shadow:0 0 0 8px rgba(239,84,102,.15), 0 10px 30px -5px rgba(239,84,102,.6);}
+@keyframes sosPulse{
+  0%,100%{box-shadow:0 0 0 12px rgba(239,84,102,.12), 0 0 0 24px rgba(239,84,102,.06), 0 20px 50px -10px rgba(239,84,102,.7);}
+  50%{box-shadow:0 0 0 18px rgba(239,84,102,.08), 0 0 0 32px rgba(239,84,102,.03), 0 20px 50px -10px rgba(239,84,102,.7);}
+}
+.sos-big-btn svg{width:36px;height:36px;}
+
+.emergency-contact{
+  display:flex;align-items:center;gap:12px;padding:13px;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-sm);
+  margin-bottom:8px;
+}
+.ec-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(140deg,var(--blue-bright),var(--blue));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:15px;flex-shrink:0;}
+.ec-info{flex:1;}
+.ec-info b{display:block;font-size:13.5px;}
+.ec-info span{font-size:12px;color:var(--text-faint);}
+.ec-call{width:34px;height:34px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;}
+.ec-call svg{width:16px;height:16px;}
+
+/* ===== PERFIL ===== */
+#screen-perfil{background:var(--bg-soft);}
+.profile-header{
+  background:linear-gradient(155deg,rgba(53,104,224,.25),transparent 65%);
+  padding:28px 20px 20px;text-align:center;
+}
+.profile-avatar-big{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(140deg,var(--blue-bright),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;font-size:32px;
+  margin:0 auto 12px;
+  box-shadow:0 8px 24px -8px rgba(91,138,255,.6);
+}
+.profile-header h3{font-size:20px;margin-bottom:2px;}
+.profile-header span{font-size:13px;color:var(--text-faint);}
+.profile-header .profile-pill{display:inline-flex;margin-top:10px;}
+
+.settings-group{margin-bottom:16px;}
+.settings-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);padding:0 20px;margin-bottom:6px;}
+.settings-item{
+  display:flex;align-items:center;gap:14px;padding:14px 20px;
+  border-bottom:1px solid var(--line);background:var(--bg-card);
+  cursor:pointer;transition:background .2s;
+}
+.settings-item:first-child{border-top:1px solid var(--line);}
+.settings-item:hover{background:var(--bg-card-hover);}
+.settings-item .si-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.settings-item .si-icon svg{width:18px;height:18px;}
+.settings-item .si-info{flex:1;}
+.settings-item .si-info b{display:block;font-size:14px;}
+.settings-item .si-info span{display:block;font-size:12px;color:var(--text-faint);}
+.settings-item .si-arrow svg{width:16px;height:16px;color:var(--text-faint);}
+.toggle-switch{width:42px;height:24px;border-radius:999px;background:var(--line-strong);position:relative;cursor:pointer;flex-shrink:0;transition:background .25s;}
+.toggle-switch.on{background:var(--blue);}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .25s;}
+.toggle-switch.on::after{transform:translateX(18px);}
+
+/* ===== PLANEJADOR ===== */
+.planner-form .field{margin-bottom:12px;}
+.planner-form label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:5px;}
+.planner-form input,.planner-form select{
+  width:100%;background:var(--bg);border:1px solid var(--line-strong);border-radius:10px;
+  padding:10px 14px;color:var(--text);transition:border-color .2s;
+}
+.planner-form input:focus,.planner-form select:focus{border-color:var(--blue-bright);outline:none;}
+.planner-form select{appearance:none;}
+
+.pause-suggestion{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  background:var(--blue-soft);border:1px solid rgba(91,138,255,.25);border-radius:12px;
+  margin-bottom:8px;
+}
+.pause-suggestion .pi{width:36px;height:36px;border-radius:10px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pause-suggestion .pi svg{width:18px;height:18px;color:var(--blue-bright);}
+.pause-suggestion .pt{flex:1;}
+.pause-suggestion .pt b{display:block;font-size:13.5px;}
+.pause-suggestion .pt span{font-size:12px;color:var(--text-faint);}
+
+/* ===== SOS MODAL ===== */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  width:340px;background:var(--bg-card);border:1px solid var(--line-strong);
+  border-radius:var(--radius-lg);padding:28px 24px;
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.8);
+  animation:modalPop .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes modalPop{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
+.modal-box h3{font-size:20px;margin-bottom:8px;}
+.modal-box p{font-size:14px;color:var(--text-dim);margin-bottom:20px;line-height:1.55;}
+.modal-actions{display:flex;gap:10px;}
+.modal-actions .btn{flex:1;}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--bg-card);border:1px solid var(--line-strong);border-radius:12px;
+  padding:12px 20px;font-size:13.5px;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 10px 40px -10px rgba(0,0,0,.6);
+  opacity:0;transition:opacity .3s, transform .3s;
+  z-index:99;pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast .toast-icon{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* Scrollbar for phone screens */
+@media(max-width:430px){
+  body{padding:0;background:#000;}
+  .phone{width:100vw;min-height:100vh;border-radius:0;border:none;}
+}
+
+/* Scenario switcher (home) */
+.scenario-row{display:flex;gap:8px;margin-bottom:14px;}
+.scenario-chip{
+  flex:1;padding:8px;border-radius:10px;background:var(--bg-card);border:1px solid var(--line);
+  font-size:11px;font-weight:600;color:var(--text-faint);cursor:pointer;text-align:center;
+  transition:.2s;
+}
+.scenario-chip.active{border-color:var(--blue-bright);color:var(--blue-bright);background:var(--blue-soft);}
+.scenario-chip.active.warn{border-color:var(--amber);color:var(--amber);background:var(--amber-soft);}
+.scenario-chip.active.danger{border-color:var(--red);color:var(--red);background:var(--red-soft);}
+
+/* Responsive note */
+.desktop-hint{
+  position:fixed;bottom:16px;right:16px;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:12px;
+  padding:10px 14px;font-size:12px;color:var(--text-faint);
+  display:none;
+}
+@media(min-width:440px){.desktop-hint{display:block;}}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- Status bar -->
+  <div class="phone-bar">
+    <span class="time mono" id="clockTime">09:41</span>
+    <div class="icons">
+      <!-- Signal -->
+      <svg viewBox="0 0 24 24"><rect x="2" y="14" width="3" height="6" rx="1"/><rect x="7" y="10" width="3" height="10" rx="1"/><rect x="12" y="6" width="3" height="14" rx="1"/><rect x="17" y="2" width="3" height="18" rx="1" opacity=".3"/></svg>
+      <!-- WiFi -->
+      <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/><path d="M1.42 9a16 16 0 0 1 21.16 0" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity=".4"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="20" r="1.5" fill="white"/></svg>
+      <!-- Battery -->
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13" stroke="white" stroke-width="2" stroke-linecap="round"/><rect x="4" y="9" width="12" height="6" rx="1" fill="white" opacity=".9"/></svg>
+    </div>
+  </div>
+
+  <div class="screen-wrap">
+    <!-- ============ SCREEN: HOME ============ -->
+    <div class="screen active" id="screen-home">
+      <div class="home-top">
+        <div class="home-welcome">
+          <div>
+            <p style="font-size:12px;color:var(--text-faint);">Bom dia, motorista</p>
+            <h2>Olá, <span id="userName">Carlos</span> 👋</h2>
+          </div>
+          <div class="bell" style="cursor:pointer;" onclick="showToast('Nenhum novo alerta.','blue')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <div class="notif-badge" id="notifBadge"></div>
+          </div>
+        </div>
+
+        <!-- Índice VitaSense -->
+        <div class="vitaindex-card">
+          <div class="vitaindex-label">Índice VitaSense</div>
+          <div class="vitaindex-row">
+            <div class="vitaindex-main">
+              <div class="vitaindex-status" id="vi-status">Seguro</div>
+              <div class="vitaindex-desc" id="vi-desc">Todos os sinais dentro do normal</div>
+              <div class="vitaindex-bar-wrap">
+                <div class="vitaindex-bar-track">
+                  <div class="vitaindex-bar-fill" id="vi-bar" style="width:18%;background:var(--green);"></div>
+                </div>
+              </div>
+            </div>
+            <div class="gauge-ring" id="vi-gauge" style="--gauge-pct:18;--gauge-color:var(--green);">
+              <span class="gval" id="vi-pct">18%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scenario chips -->
+        <div class="scenario-row">
+          <div class="scenario-chip active" id="chip-calmo" onclick="setHomeScenario('calmo')">🟢 Seguro</div>
+          <div class="scenario-chip" id="chip-fadiga" onclick="setHomeScenario('fadiga')">🟡 Atenção</div>
+          <div class="scenario-chip" id="chip-sos" onclick="setHomeScenario('sos')">🔴 Risco Alto</div>
+        </div>
+      </div>
+
+      <div class="home-section-pad" style="padding-top:14px;">
+        <!-- EKG + BPM -->
+        <div class="ekg-strip">
+          <span class="ekg-label">Frequência cardíaca</span>
+          <svg viewBox="0 0 600 72" preserveAspectRatio="none">
+            <path d="M0,36 L40,36 L55,12 L70,60 L85,36 L150,36 L165,22 L180,50 L195,36 L300,36 L315,12 L330,60 L345,36 L410,36 L425,22 L440,50 L455,36 L600,36 L640,36 L655,12 L670,60 L685,36 L750,36 L765,22 L780,50 L795,36 L900,36 L915,12 L930,60 L945,36 L1010,36 L1025,22 L1040,50 L1055,36 L1200,36"
+              fill="none" stroke="var(--blue-bright)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" id="ekgPath"/>
+          </svg>
+          <div class="ekg-bpm" id="home-bpm">72<span>bpm</span></div>
+        </div>
+
+        <!-- Quick metrics -->
+        <div class="quick-metrics">
+          <div class="metric-tile">
+            <div class="mt-label">Tempo de direção</div>
+            <div class="mt-value mono" id="home-tempo">00:00</div>
+            <div class="mt-sub">em andamento</div>
+          </div>
+          <div class="metric-tile">
+            <div class="mt-label">Próxima pausa</div>
+            <div class="mt-value mono" id="home-pausa">4h00</div>
+            <div class="mt-sub">recomendada</div>
+          </div>
+          <div class="metric-tile">
+            <div class="mt-label">Bateria</div>
+            <div class="mt-value mono" id="home-bateria">87%</div>
+            <div class="mt-sub">pulseira</div>
+          </div>
+          <div class="metric-tile">
+            <div class="mt-label">Alertas hoje</div>
+            <div class="mt-value mono" id="home-alertas">0</div>
+            <div class="mt-sub">emitidos</div>
+          </div>
+        </div>
+
+        <!-- Últimos alertas -->
+        <div class="card">
+          <div class="card-title">Últimos alertas</div>
+          <div id="homeAlertList">
+            <div style="text-align:center;padding:16px 0;font-size:13px;color:var(--text-faint);">Sem alertas recentes. Dirija com segurança! 🛡️</div>
+          </div>
+        </div>
+
+        <!-- Planejador rápido CTA -->
+        <div class="card" style="background:var(--blue-soft);border-color:rgba(91,138,255,.25);cursor:pointer;" onclick="goScreen('planejador')">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:42px;height:42px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/><path d="M12 7v5l3 3"/></svg>
+            </div>
+            <div style="flex:1;">
+              <b style="display:block;font-size:14px;color:var(--blue-bright);">Planejar viagem</b>
+              <span style="font-size:12px;color:var(--text-dim);">Sugestões de pausa personalizadas</span>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-bright)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: HISTÓRICO ============ -->
+    <div class="screen" id="screen-historico">
+      <div class="screen-header">
+        <h2>Histórico</h2>
+        <p>Suas últimas viagens registradas</p>
+      </div>
+      <div style="padding:14px 16px;">
+        <!-- Filter chips -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
+          <div class="scenario-chip active" style="flex:none;padding:6px 14px;">Todas</div>
+          <div class="scenario-chip" style="flex:none;padding:6px 14px;">Esta semana</div>
+          <div class="scenario-chip" style="flex:none;padding:6px 14px;">Este mês</div>
+        </div>
+
+        <div id="tripList">
+          <!-- Trips injected by JS -->
+        </div>
+
+        <!-- Stats summary -->
+        <div class="card" style="margin-top:4px;">
+          <div class="card-title">Resumo do período</div>
+          <div class="row-item"><span class="label">Total de viagens</span><span class="value">7</span></div>
+          <div class="row-item"><span class="label">Horas ao volante</span><span class="value">41h 20m</span></div>
+          <div class="row-item"><span class="label">Alertas totais</span><span class="value">12</span></div>
+          <div class="row-item"><span class="label">Índice médio</span><span class="value" style="color:var(--green);">Seguro</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: METAS ============ -->
+    <div class="screen" id="screen-metas">
+      <div class="screen-header">
+        <h2>Metas &amp; Conquistas</h2>
+        <p>Hábitos seguros, estrada mais segura</p>
+      </div>
+      <div style="padding:14px 16px;">
+
+        <div class="card">
+          <div class="card-title">Metas ativas</div>
+          <div id="metaList"><!-- injected --></div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;">Conquistas</div>
+          <div class="conquista-grid" id="conquistaGrid"><!-- injected --></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: SOS ============ -->
+    <div class="screen" id="screen-sos">
+      <div class="screen-header" style="background:rgba(239,84,102,.08);border-bottom-color:rgba(239,84,102,.2);">
+        <h2 style="color:var(--red);">SOS Emergência</h2>
+        <p>Use apenas em situações de risco real</p>
+      </div>
+      <div class="sos-hero">
+        <div class="sos-btn-wrap">
+          <button class="sos-big-btn" onclick="triggerSOS()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            SOS
+          </button>
+        </div>
+        <p style="font-size:13px;color:var(--text-faint);max-width:260px;margin:0 auto 6px;">Pressione e segure para acionar um alerta de emergência com sua localização.</p>
+      </div>
+
+      <div style="padding:4px 16px;">
+        <div class="card">
+          <div class="card-title">Localização atual</div>
+          <div style="background:var(--bg);border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border:1px solid var(--line);">
+            <div style="text-align:center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue-bright)" stroke-width="2" style="margin:0 auto 4px;display:block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span style="font-size:12px;color:var(--text-faint);">BR-116, São Paulo – SP</span>
+            </div>
+          </div>
+          <div class="row-item"><span class="label">Coordenadas</span><span class="value" style="font-size:12px;">-23.5505, -46.6333</span></div>
+          <div class="row-item"><span class="label">Última atualização</span><span class="value">agora</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Contatos de emergência</div>
+          <div id="contactList"><!-- injected --></div>
+          <button class="btn btn-ghost btn-block btn-sm" style="margin-top:10px;" onclick="showToast('Contato adicionado!','green')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Adicionar contato
+          </button>
+        </div>
+
+        <div class="card" style="background:var(--red-soft);border-color:rgba(239,84,102,.25);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            <div>
+              <b style="display:block;font-size:13px;color:var(--red);">Em emergência médica ligue 192 (SAMU)</b>
+              <span style="font-size:12px;color:var(--text-faint);">ou 193 (Bombeiros)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: PERFIL ============ -->
+    <div class="screen" id="screen-perfil">
+      <div class="profile-header">
+        <div class="profile-avatar-big" id="profileAvatar">C</div>
+        <h3 id="profileName">Carlos Silva</h3>
+        <span id="profileProfissao">Caminhoneiro</span>
+        <div class="profile-pill pill pill-green">
+          <span class="dot"></span>Pulseira conectada
+        </div>
+      </div>
+
+      <div style="padding:14px 0 0;">
+        <div class="settings-group">
+          <div class="settings-label">Conta</div>
+          <div class="settings-item" onclick="showToast('Edição de perfil disponível em breve.','blue')">
+            <div class="si-icon" style="background:var(--blue-soft);color:var(--blue-bright);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="si-info"><b>Editar perfil</b><span>Nome, foto, profissão</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="settings-item" onclick="showToast('Dados da pulseira atualizados.','green')">
+            <div class="si-icon" style="background:var(--purple-soft);color:var(--purple);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg></div>
+            <div class="si-info"><b>Minha pulseira</b><span>VitaSense Drive · SN: VSB-2024-0291</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">Configurações</div>
+          <div class="settings-item" onclick="goScreen('configuracoes')">
+            <div class="si-icon" style="background:var(--amber-soft);color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+            <div class="si-info"><b>Configurações</b><span>Alertas, vibração, idioma</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="settings-item" onclick="goScreen('sos')">
+            <div class="si-icon" style="background:var(--red-soft);color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+            <div class="si-info"><b>Contatos de emergência</b><span>Gerenciar contatos SOS</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div style="padding:0 16px 20px;">
+          <div class="card">
+            <div class="card-title">Informações da conta</div>
+            <div class="row-item"><span class="label">E-mail</span><span class="value" style="font-size:12px;">carlos.s@email.com</span></div>
+            <div class="row-item"><span class="label">Telefone</span><span class="value">(11) 99999-0000</span></div>
+            <div class="row-item"><span class="label">Plano</span><span class="value" style="color:var(--green);">Motorista</span></div>
+            <div class="row-item"><span class="label">Cliente desde</span><span class="value">Jan 2025</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: PLANEJADOR (extra, acessado do home) ============ -->
+    <div class="screen" id="screen-planejador">
+      <div class="screen-header" style="display:flex;align-items:center;gap:12px;flex-direction:row;">
+        <button onclick="goScreen('home')" style="width:32px;height:32px;border-radius:50%;background:var(--bg-card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <h2 style="font-size:18px;">Planejador de Viagem</h2>
+          <p>Pause na hora certa, chegue seguro</p>
+        </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div class="card planner-form">
+          <div class="card-title">Dados da viagem</div>
+          <div class="field">
+            <label>Destino</label>
+            <input type="text" id="planDestino" placeholder="Ex: Campinas, SP" oninput="calcPlanner()">
+          </div>
+          <div class="field">
+            <label>Duração estimada (horas)</label>
+            <input type="number" id="planHoras" placeholder="Ex: 6" min="1" max="24" oninput="calcPlanner()">
+          </div>
+          <div class="field">
+            <label>Horário de partida</label>
+            <input type="time" id="planPartida" value="08:00" oninput="calcPlanner()">
+          </div>
+          <div class="field">
+            <label>Intervalo preferido de pausa</label>
+            <select id="planIntervalo" onchange="calcPlanner()">
+              <option value="2">A cada 2 horas</option>
+              <option value="3" selected>A cada 3 horas</option>
+              <option value="4">A cada 4 horas</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="plannerResult" style="display:none;">
+          <div class="card">
+            <div class="card-title">Sugestões de pausa</div>
+            <div id="pauseList"><!-- injected --></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Resumo</div>
+            <div class="row-item"><span class="label">Destino</span><span class="value" id="summDestino" style="font-size:12px;max-width:160px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span></div>
+            <div class="row-item"><span class="label">Chegada estimada</span><span class="value" id="summChegada">—</span></div>
+            <div class="row-item"><span class="label">Pausas sugeridas</span><span class="value" id="summPausas">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN: CONFIGURAÇÕES (extra, acessado do perfil) ============ -->
+    <div class="screen" id="screen-configuracoes">
+      <div class="screen-header" style="display:flex;align-items:center;gap:12px;flex-direction:row;">
+        <button onclick="goScreen('perfil')" style="width:32px;height:32px;border-radius:50%;background:var(--bg-card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <h2 style="font-size:18px;">Configurações</h2>
+          <p>Personalize o aplicativo</p>
+        </div>
+      </div>
+      <div style="padding:14px 0;">
+        <div class="settings-group">
+          <div class="settings-label">Alertas e vibração</div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--blue-soft);color:var(--blue-bright);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+            <div class="si-info"><b>Sons de alerta</b><span>Ativar avisos sonoros</span></div>
+            <div class="toggle-switch on" id="tgSons" onclick="toggleSwitch('tgSons')"></div>
+          </div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--purple-soft);color:var(--purple);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4m4 0h8a4 4 0 0 1 0 8H8z"/><rect x="8" y="8" width="2" height="8"/></svg></div>
+            <div class="si-info"><b>Intensidade da vibração</b><span>Alta</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--amber-soft);color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/><path d="M12 7v5l3 3"/></svg></div>
+            <div class="si-info"><b>Intervalo de monitoramento</b><span>A cada 30s</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">Notificações</div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--green-soft);color:var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="si-info"><b>Alertas de fadiga</b><span>Sempre ativo</span></div>
+            <div class="toggle-switch on" id="tgFadiga" onclick="toggleSwitch('tgFadiga')"></div>
+          </div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--blue-soft);color:var(--blue-bright);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/><path d="M12 7v5l3 3"/></svg></div>
+            <div class="si-info"><b>Lembretes de pausa</b><span>A cada 2h dirigindo</span></div>
+            <div class="toggle-switch on" id="tgPausa" onclick="toggleSwitch('tgPausa')"></div>
+          </div>
+          <div class="settings-item">
+            <div class="si-icon" style="background:var(--amber-soft);color:var(--amber);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg></div>
+            <div class="si-info"><b>Alerta de bateria baixa</b><span>Abaixo de 20%</span></div>
+            <div class="toggle-switch on" id="tgBat" onclick="toggleSwitch('tgBat')"></div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">Geral</div>
+          <div class="settings-item" onclick="showToast('Idioma: Português (BR)','blue')">
+            <div class="si-icon" style="background:var(--bg-card);color:var(--text-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+            <div class="si-info"><b>Idioma</b><span>Português (BR)</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="settings-item" onclick="showToast('Dados exportados com sucesso!','green')">
+            <div class="si-icon" style="background:var(--bg-card);color:var(--text-dim);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+            <div class="si-info"><b>Exportar dados</b><span>Baixar histórico em PDF</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="settings-item" onclick="showToast('Cache limpo.','green')">
+            <div class="si-icon" style="background:var(--red-soft);color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
+            <div class="si-info"><b>Limpar cache</b><span>Liberar espaço</span></div>
+            <div class="si-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div style="padding:0 16px 20px;">
+          <p style="font-size:11px;color:var(--text-faint);text-align:center;">VitaSense Drive v2.4.1 · © 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="nav-tab active" id="tab-home" onclick="goScreen('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11l2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"/></svg>
+      Home
+    </div>
+    <div class="nav-tab" id="tab-historico" onclick="goScreen('historico')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+      Histórico
+    </div>
+    <div class="nav-tab" id="tab-metas" onclick="goScreen('metas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Metas
+    </div>
+    <div class="nav-tab sos-tab" id="tab-sos" onclick="goScreen('sos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      SOS
+    </div>
+    <div class="nav-tab" id="tab-perfil" onclick="goScreen('perfil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Perfil
+    </div>
+  </nav>
+</div>
+
+<!-- SOS Modal -->
+<div class="modal-overlay" id="sosModal">
+  <div class="modal-box">
+    <h3 style="color:var(--red);">⚠️ SOS Acionado</h3>
+    <p>Sua localização está sendo compartilhada com os seus contatos de emergência. Aguarde atendimento. Em caso de emergência médica, ligue <b>192</b> (SAMU).</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmSOS()">Confirmar SOS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toastEl">
+  <div class="toast-icon" id="toastIcon"></div>
+  <span id="toastMsg">Mensagem</span>
+</div>
+
+<div class="desktop-hint">📱 Visualize em 390px para experiência mobile</div>
+
+<script>
+/* ============ ESTADO ============ */
+let currentScreen = 'home';
+const navTabs = ['home','historico','metas','sos','perfil'];
+let homeElapsed = 0;
+let homeTimer = null;
+let homeBpmTimer = null;
+let homeAlertCount = 0;
+let currentScenario = 'calmo';
+
+const scenarios = {
+  calmo:  { label:'Seguro', desc:'Todos os sinais dentro do normal', pct:18, color:'var(--green)', bpm:[64,80], barColor:'var(--green)' },
+  fadiga: { label:'Atenção', desc:'Padrões indicando cansaço crescente', pct:62, color:'var(--amber)', bpm:[58,68], barColor:'var(--amber)' },
+  sos:    { label:'Risco Alto', desc:'Sinais críticos detectados — pare agora', pct:90, color:'var(--red)', bpm:[95,118], barColor:'var(--red)' }
+};
+
+/* ============ NAVEGAÇÃO ============ */
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if(el) el.classList.add('active');
+  currentScreen = id;
+
+  // Update nav tabs
+  navTabs.forEach(t => {
+    const tab = document.getElementById('tab-' + t);
+    if(tab) tab.classList.toggle('active', t === id);
+  });
+
+  // Scroll to top
+  if(el) el.scrollTop = 0;
+}
+
+/* ============ RELÓGIO ============ */
+function updateClock() {
+  const now = new Date();
+  const hh = now.getHours().toString().padStart(2,'0');
+  const mm = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clockTime').textContent = hh + ':' + mm;
+}
+setInterval(updateClock, 10000);
+updateClock();
+
+/* ============ HOME: TIMER ============ */
+function startHomeTimer() {
+  homeTimer = setInterval(() => {
+    homeElapsed += 60;
+    const totalMin = Math.floor(homeElapsed / 60);
+    const hh = Math.floor(totalMin / 60).toString().padStart(2,'0');
+    const mm = (totalMin % 60).toString().padStart(2,'0');
+    const tempoEl = document.getElementById('home-tempo');
+    if(tempoEl) tempoEl.textContent = hh + ':' + mm;
+    const restante = Math.max(0, 240 - totalMin);
+    const rh = Math.floor(restante/60), rm = restante % 60;
+    const pausaEl = document.getElementById('home-pausa');
+    if(pausaEl) pausaEl.textContent = restante === 0 ? 'agora!' : rh + 'h' + rm.toString().padStart(2,'0');
+    if(restante === 0) showToast('Pausa recomendada! Dirija-se a um ponto de descanso.','amber');
+  }, 1000);
+
+  homeBpmTimer = setInterval(() => {
+    const sc = scenarios[currentScenario];
+    const [min,max] = sc.bpm;
+    const bpm = Math.round(min + Math.random()*(max-min));
+    const el = document.getElementById('home-bpm');
+    if(el) el.firstChild.textContent = bpm;
+  }, 1200);
+}
+
+/* ============ HOME: SCENARIO ============ */
+function setHomeScenario(s) {
+  currentScenario = s;
+  const sc = scenarios[s];
+
+  // chips
+  ['calmo','fadiga','sos'].forEach(k => {
+    const c = document.getElementById('chip-' + k);
+    if(!c) return;
+    c.className = 'scenario-chip' + (k === s ? ' active ' + (k === 'fadiga' ? 'warn' : k === 'sos' ? 'danger' : '') : '');
+  });
+
+  // VitaIndex gauge
+  const gauge = document.getElementById('vi-gauge');
+  if(gauge) { gauge.style.setProperty('--gauge-pct', sc.pct); gauge.style.setProperty('--gauge-color', sc.color); }
+  const pct = document.getElementById('vi-pct');
+  if(pct) pct.textContent = sc.pct + '%';
+  const status = document.getElementById('vi-status');
+  if(status) { status.textContent = sc.label; status.style.color = sc.color; }
+  const desc = document.getElementById('vi-desc');
+  if(desc) desc.textContent = sc.desc;
+  const bar = document.getElementById('vi-bar');
+  if(bar) { bar.style.width = sc.pct + '%'; bar.style.background = sc.barColor; }
+
+  // EKG color
+  const ekgPath = document.getElementById('ekgPath');
+  if(ekgPath) ekgPath.style.stroke = s === 'calmo' ? 'var(--blue-bright)' : s === 'fadiga' ? 'var(--amber)' : 'var(--red)';
+
+  // Trigger alert if risky
+  if(s === 'fadiga') {
+    homeAlertCount++;
+    document.getElementById('home-alertas').textContent = homeAlertCount;
+    addHomeAlert('intensa','Vibração intensa','Fadiga detectada — reduza a velocidade', getNow());
+    showToast('⚠️ Sinais de fadiga detectados!','amber');
+  } else if(s === 'sos') {
+    homeAlertCount++;
+    document.getElementById('home-alertas').textContent = homeAlertCount;
+    addHomeAlert('critico','Alerta crítico','Risco alto — pare o veículo agora', getNow());
+    showToast('🚨 Risco alto! Pare com segurança.','red');
+  }
+}
+
+function addHomeAlert(type, title, desc, time) {
+  const list = document.getElementById('homeAlertList');
+  const empty = list.querySelector('div[style]');
+  if(empty) empty.remove();
+
+  const iconMap = {
+    leve:'<path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',
+    intensa:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+    critico:'<path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',
+    pausa:'<path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/><path d="M12 7v5l3 3"/>'
+  };
+  const item = document.createElement('div');
+  item.className = 'alert-item';
+  item.innerHTML = `
+    <div class="alert-icon ${type}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconMap[type]||iconMap.leve}</svg></div>
+    <div class="alert-content"><b>${title}</b><span>${desc}</span></div>
+    <div class="alert-time">${time}</div>
+  `;
+  list.insertBefore(item, list.firstChild);
+}
+
+function getNow() {
+  const now = new Date();
+  return now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+
+/* ============ TRIPS DATA ============ */
+const tripsData = [
+  { title:'São Paulo → Ribeirão Preto', date:'24 Jun 2026', dur:'3h 45m', fadiga:'Seguro', alertas:0, km:'320km' },
+  { title:'São Paulo → Campinas', date:'22 Jun 2026', dur:'1h 30m', fadiga:'Atenção', alertas:2, km:'100km' },
+  { title:'São Paulo → Belo Horizonte', date:'19 Jun 2026', dur:'7h 10m', fadiga:'Seguro', alertas:1, km:'580km' },
+  { title:'Ribeirão Preto → São Paulo', date:'15 Jun 2026', dur:'3h 50m', fadiga:'Seguro', alertas:0, km:'320km' },
+  { title:'São Paulo → Santos', date:'10 Jun 2026', dur:'1h 20m', fadiga:'Seguro', alertas:0, km:'80km' },
+];
+
+function renderTrips() {
+  const list = document.getElementById('tripList');
+  list.innerHTML = '';
+  tripsData.forEach(t => {
+    const fadClass = t.fadiga === 'Seguro' ? 'green' : 'amber';
+    const card = document.createElement('div');
+    card.className = 'trip-card';
+    card.innerHTML = `
+      <div class="trip-top">
+        <div>
+          <div class="trip-title">${t.title}</div>
+          <div class="trip-date">${t.date}</div>
+        </div>
+        <span class="pill pill-${fadClass}" style="font-size:11px;">${t.fadiga}</span>
+      </div>
+      <div class="trip-metrics">
+        <div class="trip-metric"><b>${t.dur}</b><span>Duração</span></div>
+        <div class="trip-metric"><b>${t.km}</b><span>Distância</span></div>
+        <div class="trip-metric"><b>${t.alertas}</b><span>Alertas</span></div>
+      </div>
+    `;
+    card.onclick = () => showToast('Detalhes: ' + t.title,'blue');
+    list.appendChild(card);
+  });
+}
+
+/* ============ METAS DATA ============ */
+const metasData = [
+  { icon:'😴', label:'Dormir 8h/noite', prog:75, target:'7/7 dias', color:'var(--blue)', bg:'var(--blue-soft)' },
+  { icon:'☕', label:'Realizar pausas recomendadas', prog:90, target:'9/10 pausas', color:'var(--green)', bg:'var(--green-soft)' },
+  { icon:'🛡️', label:'Viagens sem alertas críticos', prog:60, target:'3/5 viagens', color:'var(--amber)', bg:'var(--amber-soft)' },
+  { icon:'📈', label:'Melhorar índice de segurança', prog:45, target:'Índice 82%', color:'var(--purple)', bg:'var(--purple-soft)' },
+];
+
+const conquistasData = [
+  { badge:'🏆', name:'Motorista Consciente', desc:'10 viagens seguras', unlocked:true },
+  { badge:'👁️', name:'Atenção Máxima', desc:'Zero alertas críticos', unlocked:true },
+  { badge:'🛣️', name:'Guardião da Estrada', desc:'1000km sem fadiga alta', unlocked:false },
+  { badge:'🌙', name:'Coruja Noturna', desc:'5 viagens noturnas seguras', unlocked:false },
+  { badge:'⚡', name:'Bateria Cheia', desc:'Carregou 7 dias seguidos', unlocked:true },
+  { badge:'🎯', name:'Meta Cumprida', desc:'Completou todas as metas', unlocked:false },
+];
+
+function renderMetas() {
+  const list = document.getElementById('metaList');
+  list.innerHTML = '';
+  metasData.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'meta-card';
+    div.innerHTML = `
+      <div class="meta-top">
+        <div class="meta-icon" style="background:${m.bg};color:${m.color};font-size:20px;">${m.icon}</div>
+        <div class="meta-info"><b>${m.label}</b><span>${m.target}</span></div>
+      </div>
+      <div class="meta-prog-track"><div class="meta-prog-fill" style="width:${m.prog}%;background:${m.color};"></div></div>
+      <div class="meta-footer"><span>${m.prog}% concluído</span><span style="color:${m.color};">${m.prog >= 100 ? '✓ Concluída' : 'Em progresso'}</span></div>
+    `;
+    list.appendChild(div);
+  });
+
+  const grid = document.getElementById('conquistaGrid');
+  grid.innerHTML = '';
+  conquistasData.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'conquista-card ' + (c.unlocked ? 'unlocked' : 'locked');
+    div.innerHTML = `<span class="conquista-badge">${c.badge}</span><b>${c.name}</b><span>${c.desc}</span>`;
+    grid.appendChild(div);
+  });
+}
+
+/* ============ CONTACTS DATA ============ */
+function renderContacts() {
+  const list = document.getElementById('contactList');
+  const contacts = [
+    { name:'Maria Silva', rel:'Esposa', phone:'(11) 98888-1111' },
+    { name:'João Silva', rel:'Filho', phone:'(11) 97777-2222' },
+  ];
+  list.innerHTML = '';
+  contacts.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'emergency-contact';
+    div.innerHTML = `
+      <div class="ec-avatar">${c.name[0]}</div>
+      <div class="ec-info"><b>${c.name}</b><span>${c.rel} · ${c.phone}</span></div>
+      <button class="ec-call" onclick="showToast('Ligando para ${c.name}…','green')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+/* ============ SOS ============ */
+function triggerSOS() {
+  document.getElementById('sosModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('sosModal').classList.remove('open');
+}
+function confirmSOS() {
+  closeModal();
+  showToast('🚨 SOS enviado! Contatos notificados.','red');
+  homeAlertCount++;
+  document.getElementById('home-alertas').textContent = homeAlertCount;
+  addHomeAlert('critico','SOS acionado','Localização enviada aos contatos', getNow());
+}
+
+/* ============ TOGGLE SWITCH ============ */
+function toggleSwitch(id) {
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('on');
+}
+
+/* ============ TOAST ============ */
+let toastTimer = null;
+function showToast(msg, type='blue') {
+  const el = document.getElementById('toastEl');
+  const icon = document.getElementById('toastIcon');
+  const msgEl = document.getElementById('toastMsg');
+  const colorMap = { blue:'var(--blue-bright)', green:'var(--green)', amber:'var(--amber)', red:'var(--red)' };
+  icon.style.background = colorMap[type] || colorMap.blue;
+  msgEl.textContent = msg;
+  el.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ============ PLANNER ============ */
+function calcPlanner() {
+  const destino = document.getElementById('planDestino').value.trim();
+  const horas = parseInt(document.getElementById('planHoras').value) || 0;
+  const partida = document.getElementById('planPartida').value || '08:00';
+  const intervalo = parseInt(document.getElementById('planIntervalo').value) || 3;
+
+  if(!destino || !horas) { document.getElementById('plannerResult').style.display='none'; return; }
+
+  const [hh,mm] = partida.split(':').map(Number);
+  const startMin = hh*60+mm;
+  const pauseList = document.getElementById('pauseList');
+  pauseList.innerHTML = '';
+
+  const pausas = [];
+  for(let p = intervalo; p < horas; p += intervalo) {
+    const t = startMin + p*60;
+    const ph = Math.floor(t/60)%24, pm = t%60;
+    const timeStr = ph.toString().padStart(2,'0') + ':' + pm.toString().padStart(2,'0');
+    pausas.push(timeStr);
+    const div = document.createElement('div');
+    div.className = 'pause-suggestion';
+    div.innerHTML = `
+      <div class="pi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/><path d="M12 7v5l3 3"/></svg></div>
+      <div class="pt"><b>Pausa às ${timeStr}</b><span>Após ${p}h de direção — descanso de 15–30min</span></div>
+    `;
+    pauseList.appendChild(div);
+  }
+
+  const chegadaMin = startMin + horas*60;
+  const ch = Math.floor(chegadaMin/60)%24, cm = chegadaMin%60;
+  document.getElementById('summDestino').textContent = destino;
+  document.getElementById('summChegada').textContent = ch.toString().padStart(2,'0') + ':' + cm.toString().padStart(2,'0');
+  document.getElementById('summPausas').textContent = pausas.length > 0 ? pausas.length + (pausas.length === 1 ? ' pausa' : ' pausas') : 'Nenhuma necessária';
+  document.getElementById('plannerResult').style.display = 'block';
+}
+
+/* ============ INIT ============ */
+window.addEventListener('DOMContentLoaded', () => {
+  renderTrips();
+  renderMetas();
+  renderContacts();
+  startHomeTimer();
+  // Initial scenario
+  setHomeScenario('calmo');
+});
+</script>
+</body>
+</html>
